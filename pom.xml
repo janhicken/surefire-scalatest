@@ -6,7 +6,8 @@
     <groupId>io.github.janhicken</groupId>
     <artifactId>surefire-scalatest</artifactId>
     <version>0.1-SNAPSHOT</version>
-    <name>SureFire ScalaTest Runner</name>
+    <name>SureFire ScalaTest Provider</name>
+    <description>A SureFire Provider for ScalaTest</description>
     <url>https://github.com/janhicken/surefire-scalatest</url>
 
     <properties>
@@ -110,6 +111,7 @@
                             <goal>add-source</goal>
                             <goal>compile</goal>
                             <goal>testCompile</goal>
+                            <goal>doc-jar</goal>
                         </goals>
                     </execution>
                 </executions>

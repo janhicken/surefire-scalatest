@@ -3,7 +3,6 @@ package io.github.janhicken.surefire.scalatest
 import org.apache.maven.surefire.booter.ProviderParameterNames._
 import org.apache.maven.surefire.providerapi.{ProviderParameters, SurefireProvider}
 import org.apache.maven.surefire.suite.RunResult
-import org.apache.maven.surefire.util.ScannerFilter
 import org.scalatest.tools.{Runner, SurefireReporter}
 import org.scalatest.{DoNotDiscover, Suite, WrapWith}
 
@@ -17,8 +16,10 @@ class ScalaTestProvider(parameters: ProviderParameters) extends SurefireProvider
 
   private var thread: Thread = _
 
-  override def getSuites: java.lang.Iterable[Class[_]] = parameters.getScanResult
-    .applyFilter(ScalaTestScannerFilter, parameters.getTestClassLoader)
+  override def getSuites: java.lang.Iterable[Class[_]] = parameters.getScanResult.applyFilter(
+    testClass => isDiscoverableSuite(testClass) && (isAccessibleSuite(testClass) || isRunnable(testClass)),
+    parameters.getTestClassLoader
+  )
 
   override def invoke(forkTestSet: AnyRef): RunResult = {
     val argsBuilder = Array.newBuilder[String]
@@ -67,8 +68,4 @@ object ScalaTestProvider {
     !Modifier.isAbstract(testClass.getModifiers) &&
     Try(testClass.getConstructor()).map(c => Modifier.isPublic(c.getModifiers)).getOrElse(false)
 
-  object ScalaTestScannerFilter extends ScannerFilter {
-    override def accept(testClass: Class[_]): Boolean = isDiscoverableSuite(testClass) &&
-      (isAccessibleSuite(testClass) || isRunnable(testClass))
-  }
 }

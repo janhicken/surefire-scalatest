@@ -50,9 +50,7 @@ class ScalaTestProvider(parameters: ProviderParameters) extends SurefireProvider
     parameters.getReporterFactory.close()
   }
 
-  override def cancel(): Unit = {
-    thread.interrupt()
-  }
+  override def cancel(): Unit = thread.interrupt()
 }
 
 object ScalaTestProvider {

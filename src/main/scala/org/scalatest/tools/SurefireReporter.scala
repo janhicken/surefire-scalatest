@@ -29,7 +29,7 @@ class SurefireReporter
       case TestStarting(_, suiteName, _, _, testName, _, _, _, _, _, _, _) =>
         runListener.testStarting(new SimpleReportEntry(suiteName, testName))
       case TestSucceeded(_, suiteName, _, _, testName, _, _, _, _, _, _, _, _, _) =>
-        runListener.testStarting(new SimpleReportEntry(suiteName, testName))
+        runListener.testSucceeded(new SimpleReportEntry(suiteName, testName))
       case TestFailed(_, message, suiteName, _, _, testName, _, _, _, _, _, _, _, _, _, _, _) =>
         runListener.testFailed(new SimpleReportEntry(suiteName, testName, message))
       case TestIgnored(_, suiteName, _, _, testName, _, _, _, _, _, _) =>

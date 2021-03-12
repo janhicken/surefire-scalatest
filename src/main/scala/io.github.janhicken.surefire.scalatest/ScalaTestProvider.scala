@@ -30,7 +30,7 @@ class ScalaTestProvider(parameters: ProviderParameters) extends SurefireProvider
 
     val properties = parameters.getProviderProperties.asScala
     (properties.get(PARALLEL_PROP), properties.get(THREADCOUNT_PROP)) match {
-      case (Some("suites"), Some("0"))        => argsBuilder += "-P"
+      case (Some("suites"), Some("0"))      => argsBuilder += "-P"
       case (Some("suites"), Some(nThreads)) => argsBuilder += s"-P$nThreads"
       case _                                =>
     }

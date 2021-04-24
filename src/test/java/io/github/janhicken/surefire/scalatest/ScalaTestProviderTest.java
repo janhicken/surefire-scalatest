@@ -6,46 +6,41 @@ import org.apache.maven.surefire.report.ConsoleStream;
 import org.apache.maven.surefire.report.DefaultDirectConsoleReporter;
 import org.apache.maven.surefire.report.ReporterConfiguration;
 import org.apache.maven.surefire.util.DefaultScanResult;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.scalatest.tools.SurefireReporter;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.File;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class ScalaTestProviderTest {
 
-    private static Path _tmpDir;
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private ScalaTestProvider provider;
     private ByteArrayOutputStream output;
 
-    @BeforeClass
-    public static void beforeClass() throws IOException {
-        _tmpDir = Files.createTempDirectory("surefire-scalatest");
-        _tmpDir.toFile().deleteOnExit();
-    }
-
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         this.output = new ByteArrayOutputStream();
         final var providerParameters = new TestProviderParameters(
             new PrintStream(output),
             List.of(
                 ScalaTestProvider.class, SurefireReporter.class,
-                ScalaTestProviderTest.class, ExampleSpec.class
+                ScalaTestProviderTest.class, ExampleSpec.class, HiddenSpec.class
             ),
-            _tmpDir
+            temporaryFolder.newFolder()
         );
 
         provider = new ScalaTestProvider(providerParameters);
@@ -70,19 +65,20 @@ public class ScalaTestProviderTest {
         assertTrue(outputString.contains("- should do something without exception"));
         assertTrue(outputString.contains("- should ignore something !!! IGNORED !!!"));
         assertTrue(outputString.contains("- should fail dividing by 0 *** FAILED ***"));
+        assertFalse(outputString.contains("- not be discovered"));
     }
 
     static class TestProviderParameters extends BaseProviderFactory {
 
         private final PrintStream printStream;
 
-        public TestProviderParameters(final PrintStream printStream, final List<Class<?>> discoveredClasses, final Path tmpDir) {
+        public TestProviderParameters(final PrintStream printStream, final List<Class<?>> discoveredClasses, final File tmpDir) {
             super(new ForkingReporterFactory(true, printStream), false);
             this.printStream = printStream;
 
             setClassLoaders(getClass().getClassLoader());
             setProviderProperties(new HashMap<>());
-            setReporterConfiguration(new ReporterConfiguration(tmpDir.toFile(), true));
+            setReporterConfiguration(new ReporterConfiguration(tmpDir, true));
 
             final var classNames = discoveredClasses.stream().map(Class::getName).collect(Collectors.toList());
             new DefaultScanResult(classNames).writeTo(getProviderProperties());

@@ -60,7 +60,7 @@ object ScalaTestProvider {
         .exists(_.getParameterTypes.headOption.fold(false)(_ == classOf[Class[_]]))
     )
 
-  def isDiscoverableSuite(testClass: Class[_]): Boolean = !testClass.isAnnotationPresent(classOf[DoNotDiscover])
+  def isDiscoverable(testClass: Class[_]): Boolean = !testClass.isAnnotationPresent(classOf[DoNotDiscover])
 
   def isAccessibleSuite(testClass: Class[_]): Boolean = classOf[Suite].isAssignableFrom(testClass) &&
     Modifier.isPublic(testClass.getModifiers) &&
@@ -68,7 +68,7 @@ object ScalaTestProvider {
     Try(testClass.getConstructor()).map(c => Modifier.isPublic(c.getModifiers)).getOrElse(false)
 
   object ScalaTestScannerFilter extends ScannerFilter {
-    override def accept(testClass: Class[_]): Boolean = isDiscoverableSuite(testClass) &&
+    override def accept(testClass: Class[_]): Boolean = isDiscoverable(testClass) &&
       (isAccessibleSuite(testClass) || isRunnable(testClass))
   }
 }

@@ -50,8 +50,9 @@ object SurefireReporter {
   var runListener: RunListener = _
 
   class ConsoleStreamWriter(consoleStream: ConsoleStream) extends Writer {
-    override def write(cbuf: Array[Char], off: Int, len: Int): Unit =
-      consoleStream.println(new String(cbuf, off, len))
+    override def write(cbuf: Array[Char], off: Int, len: Int): Unit = write(new String(cbuf, off, len))
+
+    override def write(str: String): Unit = consoleStream.println(str)
 
     override def flush(): Unit = ()
 

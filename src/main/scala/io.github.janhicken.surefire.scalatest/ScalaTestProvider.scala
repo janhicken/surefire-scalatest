@@ -3,6 +3,7 @@ package io.github.janhicken.surefire.scalatest
 import org.apache.maven.surefire.booter.ProviderParameterNames._
 import org.apache.maven.surefire.providerapi.{ProviderParameters, SurefireProvider}
 import org.apache.maven.surefire.suite.RunResult
+import org.apache.maven.surefire.testset.TestSetFailedException
 import org.apache.maven.surefire.util.ScannerFilter
 import org.scalatest.tools.{Runner, SurefireReporter}
 import org.scalatest.{DoNotDiscover, Suite, WrapWith}
@@ -45,7 +46,12 @@ class ScalaTestProvider(parameters: ProviderParameters) extends SurefireProvider
     thread = new Thread(() => Runner.run(args))
     thread.setContextClassLoader(parameters.getTestClassLoader)
     thread.start()
-    thread.join()
+    try {
+      thread.join()
+    } catch {
+      case interruptedException: InterruptedException =>
+        throw new TestSetFailedException("Test execution was interrupted", interruptedException)
+    }
 
     parameters.getReporterFactory.close()
   }

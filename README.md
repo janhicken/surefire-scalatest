@@ -20,7 +20,7 @@ Just add a dependency to your Surefire plugin configuration and set the `<includ
         <dependency>
             <groupId>io.github.janhicken</groupId>
             <artifactId>surefire-scalatest</artifactId>
-            <version>0.1</version>
+            <version>0.2</version>
         </dependency>
     </dependencies>
 </plugin>

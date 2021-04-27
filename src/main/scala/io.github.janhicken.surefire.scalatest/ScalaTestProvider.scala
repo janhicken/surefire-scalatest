@@ -4,7 +4,7 @@ import org.apache.maven.surefire.booter.ProviderParameterNames._
 import org.apache.maven.surefire.providerapi.{ProviderParameters, SurefireProvider}
 import org.apache.maven.surefire.suite.RunResult
 import org.apache.maven.surefire.testset.TestSetFailedException
-import org.apache.maven.surefire.util.ScannerFilter
+import org.apache.maven.surefire.util.{ScannerFilter, TestsToRun}
 import org.scalatest.tools.{Runner, SurefireReporter}
 import org.scalatest.{DoNotDiscover, Suite, WrapWith}
 
@@ -18,9 +18,11 @@ class ScalaTestProvider(parameters: ProviderParameters) extends SurefireProvider
 
   private var thread: Thread = _
 
-  override def getSuites: java.lang.Iterable[Class[_]] = parameters.getRunOrderCalculator.orderTestClasses(
-    parameters.getScanResult.applyFilter(ScalaTestScannerFilter, parameters.getTestClassLoader)
-  )
+  override def getSuites: java.lang.Iterable[Class[_]] = Option(parameters.getRunOrderCalculator)
+    .map(roc => roc.orderTestClasses _)
+    .getOrElse[TestsToRun => TestsToRun](identity)(
+      parameters.getScanResult.applyFilter(ScalaTestScannerFilter, parameters.getTestClassLoader)
+    )
 
   override def invoke(forkTestSet: AnyRef): RunResult = {
     val argsBuilder = Array.newBuilder[String]

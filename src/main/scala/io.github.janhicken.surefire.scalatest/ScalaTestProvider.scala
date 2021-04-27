@@ -18,8 +18,9 @@ class ScalaTestProvider(parameters: ProviderParameters) extends SurefireProvider
 
   private var thread: Thread = _
 
-  override def getSuites: java.lang.Iterable[Class[_]] = parameters.getScanResult
-    .applyFilter(ScalaTestScannerFilter, parameters.getTestClassLoader)
+  override def getSuites: java.lang.Iterable[Class[_]] = parameters.getRunOrderCalculator.orderTestClasses(
+    parameters.getScanResult.applyFilter(ScalaTestScannerFilter, parameters.getTestClassLoader)
+  )
 
   override def invoke(forkTestSet: AnyRef): RunResult = {
     val argsBuilder = Array.newBuilder[String]

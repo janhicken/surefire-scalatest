@@ -11,8 +11,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.release>11</maven.compiler.release>
         <scala.compat.version>2.13</scala.compat.version>
         <scalatest.version>3.2.9</scalatest.version>
     </properties>
@@ -103,7 +102,9 @@
                     <args>
                         <arg>-feature</arg>
                         <arg>-Xlint:deprecation,unused</arg>
-                        <arg>-target:${maven.compiler.target}</arg>
+                        <arg>-target:${maven.compiler.release}</arg>
+                        <arg>--release</arg>
+                        <arg>${maven.compiler.release}</arg>
                     </args>
                 </configuration>
                 <executions>

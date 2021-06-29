@@ -10,7 +10,7 @@ import org.scalatest.{DoNotDiscover, Suite, WrapWith}
 
 import java.lang.reflect.Modifier
 import scala.jdk.CollectionConverters._
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 class ScalaTestProvider(parameters: ProviderParameters) extends SurefireProvider {
 
@@ -49,14 +49,15 @@ class ScalaTestProvider(parameters: ProviderParameters) extends SurefireProvider
     thread = new Thread(() => Runner.run(args))
     thread.setContextClassLoader(parameters.getTestClassLoader)
     thread.start()
-    try {
-      thread.join()
-    } catch {
-      case interruptedException: InterruptedException =>
-        throw new TestSetFailedException("Test execution was interrupted", interruptedException)
-    }
-
-    parameters.getReporterFactory.close()
+    Try(thread.join())
+      .transform(
+        _ => Success(parameters.getReporterFactory.close()),
+        throwable => {
+          parameters.getReporterFactory.close()
+          Failure(new TestSetFailedException("Error executing tests", throwable))
+        }
+      )
+      .get
   }
 
   override def cancel(): Unit = thread.interrupt()

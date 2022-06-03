@@ -104,9 +104,9 @@
                         <arg>-feature</arg>
                         <arg>-Xlint:deprecation,infer-any,unused</arg>
                         <arg>-Xfatal-warnings</arg>
-                        <arg>-target:${maven.compiler.release}</arg>
+                        <arg>-target:8</arg>
                         <arg>--release</arg>
-                        <arg>${maven.compiler.release}</arg>
+                        <arg>8</arg>
                     </args>
                 </configuration>
                 <executions>

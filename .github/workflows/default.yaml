@@ -15,6 +15,6 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: maven
       - name: Remove .mvn/jvm.config
-        run: rm .mvn/jvm.config
+        if: ${{ matrix.java == 8 }}
       - name: Test
         run: mvn --batch-mode --show-version verify

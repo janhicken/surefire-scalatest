@@ -140,6 +140,7 @@
                 <version>2.22.5</version>
                 <executions>
                     <execution>
+                        <phase>test</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>

@@ -2,6 +2,7 @@ package io.github.janhicken.surefire.scalatest
 
 import org.apache.maven.surefire.booter.ProviderParameterNames._
 import org.apache.maven.surefire.providerapi.{ProviderParameters, SurefireProvider}
+import org.apache.maven.surefire.report.{ConsoleOutputCapture, ConsoleOutputReceiver}
 import org.apache.maven.surefire.suite.RunResult
 import org.apache.maven.surefire.testset.TestSetFailedException
 import org.apache.maven.surefire.util.{ScannerFilter, TestsToRun}
@@ -41,7 +42,10 @@ class ScalaTestProvider(parameters: ProviderParameters) extends SurefireProvider
 
     // Sadly we cannot pass an instance of SurefireReporter to the runner, so we must configure statically
     SurefireReporter.consoleStream = parameters.getConsoleLogger
-    SurefireReporter.runListener = parameters.getReporterFactory.createReporter()
+    val reporter = parameters.getReporterFactory.createReporter()
+    SurefireReporter.runListener = reporter
+    ConsoleOutputCapture.startCapture(reporter.asInstanceOf[ConsoleOutputReceiver])
+
     argsBuilder += "-C"
     argsBuilder += classOf[SurefireReporter].getName
 

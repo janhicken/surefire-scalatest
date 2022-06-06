@@ -12,4 +12,4 @@ jobs:
           java-version: 11
           cache: maven
       - name: Test
-        run: mvn --batch-mode --show-version test
+        run: mvn --batch-mode --show-version verify

@@ -5,6 +5,8 @@ import org.scalatest.events._
 import org.scalatest.tools.SurefireReporter.{ConsoleStreamWriter, consoleStream, runListener}
 
 import java.io.{PrintWriter, Writer}
+import java.nio.CharBuffer
+import scala.io.Codec
 
 class SurefireReporter
     extends PrintReporter(
@@ -50,7 +52,15 @@ object SurefireReporter {
   var runListener: RunListener = _
 
   class ConsoleStreamWriter(consoleStream: ConsoleStream) extends Writer {
-    override def write(cbuf: Array[Char], off: Int, len: Int): Unit = write(new String(cbuf, off, len))
+
+    private val codec = Codec.UTF8
+
+    override def write(chars: Array[Char], off: Int, len: Int): Unit = {
+      val charBuffer = CharBuffer.wrap(chars, off, len)
+      val byteBuffer = codec.encoder.encode(charBuffer)
+      val bytes = byteBuffer.array()
+      consoleStream.println(bytes, 0, bytes.length)
+    }
 
     override def write(str: String): Unit = consoleStream.println(str)
 

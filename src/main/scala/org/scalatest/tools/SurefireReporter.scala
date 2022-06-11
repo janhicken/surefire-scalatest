@@ -9,17 +9,17 @@ import java.io.{PrintWriter, Writer}
 class SurefireReporter
     extends PrintReporter(
       new PrintWriter(new ConsoleStreamWriter(consoleStream)),
-      false,
-      true,
-      false,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
+      presentAllDurations = false,
+      presentInColor = true,
+      presentShortStackTraces = false,
+      presentFullStackTraces = true,
+      presentUnformatted = false,
+      presentReminder = false,
+      presentReminderWithShortStackTraces = false,
+      presentReminderWithFullStackTraces = false,
+      presentReminderWithoutCanceledTests = false,
+      presentFilePathname = false,
+      presentJson = false
     ) {
 
   override def apply(event: Event): Unit = {

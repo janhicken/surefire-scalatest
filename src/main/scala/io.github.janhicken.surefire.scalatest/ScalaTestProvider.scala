@@ -1,11 +1,11 @@
 package io.github.janhicken.surefire.scalatest
 
-import org.apache.maven.surefire.booter.ProviderParameterNames._
-import org.apache.maven.surefire.providerapi.{ProviderParameters, SurefireProvider}
-import org.apache.maven.surefire.report.{ConsoleOutputCapture, ConsoleOutputReceiver}
-import org.apache.maven.surefire.suite.RunResult
-import org.apache.maven.surefire.testset.TestSetFailedException
-import org.apache.maven.surefire.util.{ScannerFilter, TestsToRun}
+import org.apache.maven.surefire.api.booter.ProviderParameterNames.{PARALLEL_PROP, THREADCOUNT_PROP}
+import org.apache.maven.surefire.api.provider.{ProviderParameters, SurefireProvider}
+import org.apache.maven.surefire.api.report.{ConsoleOutputCapture, OutputReportEntry, TestReportListener}
+import org.apache.maven.surefire.api.suite.RunResult
+import org.apache.maven.surefire.api.testset.TestSetFailedException
+import org.apache.maven.surefire.api.util.{ScannerFilter, TestsToRun}
 import org.scalatest.tools.{Runner, SurefireReporter}
 import org.scalatest.{DoNotDiscover, Suite, WrapWith}
 
@@ -41,10 +41,9 @@ class ScalaTestProvider(parameters: ProviderParameters) extends SurefireProvider
     }
 
     // Sadly we cannot pass an instance of SurefireReporter to the runner, so we must configure statically
-    SurefireReporter.consoleStream = parameters.getConsoleLogger
-    val reporter = parameters.getReporterFactory.createReporter()
+    val reporter = parameters.getReporterFactory.createTestReportListener()
     SurefireReporter.runListener = reporter
-    ConsoleOutputCapture.startCapture(reporter.asInstanceOf[ConsoleOutputReceiver])
+    ConsoleOutputCapture.startCapture(reporter.asInstanceOf[TestReportListener[OutputReportEntry]])
 
     argsBuilder += "-C"
     argsBuilder += classOf[SurefireReporter].getName

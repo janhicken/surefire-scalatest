@@ -34,7 +34,7 @@ public class ScalaTestProviderTest {
   @Before
   public void setUp() throws Exception {
     eventChannel = new MemoizingEventChannel();
-    final BaseProviderFactory providerParameters = new BaseProviderFactory(false);
+    final var providerParameters = new BaseProviderFactory(false);
 
     providerParameters.setClassLoaders(getClass().getClassLoader());
     providerParameters.setProviderProperties(new HashMap<>());
@@ -43,7 +43,7 @@ public class ScalaTestProviderTest {
         new ReporterConfiguration(temporaryFolder.newFolder(), true));
     providerParameters.setRunOrderParameters(RunOrderParameters.alphabetical());
 
-    final List<String> classNames =
+    final var classNames =
         Stream.of(
                 ScalaTestProvider.class,
                 SurefireReporter.class,
@@ -59,9 +59,8 @@ public class ScalaTestProviderTest {
 
   @Test
   public void test_findExampleSpec() {
-    final Iterable<Class<?>> suites = provider.getSuites();
-    final List<Class<?>> list =
-        StreamSupport.stream(suites.spliterator(), false).collect(Collectors.toList());
+    final var suites = provider.getSuites();
+    final var list = StreamSupport.stream(suites.spliterator(), false).collect(Collectors.toList());
     assertEquals("The discovery suites list must have exactly one entry", 1, list.size());
     assertEquals(
         "The discovery suites list must contain only the ExampleSpec",

@@ -2,22 +2,22 @@ package io.github.janhicken.surefire.scalatest;
 
 import static org.junit.Assert.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import org.apache.maven.surefire.booter.BaseProviderFactory;
-import org.apache.maven.surefire.booter.ForkingReporterFactory;
-import org.apache.maven.surefire.providerapi.ProviderParameters;
-import org.apache.maven.surefire.report.ConsoleStream;
-import org.apache.maven.surefire.report.DefaultDirectConsoleReporter;
-import org.apache.maven.surefire.report.ReporterConfiguration;
-import org.apache.maven.surefire.util.DefaultScanResult;
+import org.apache.maven.surefire.api.booter.BaseProviderFactory;
+import org.apache.maven.surefire.api.booter.ForkingReporterFactory;
+import org.apache.maven.surefire.api.booter.MasterProcessChannelEncoder;
+import org.apache.maven.surefire.api.report.ReportEntry;
+import org.apache.maven.surefire.api.report.ReporterConfiguration;
+import org.apache.maven.surefire.api.report.StackTraceWriter;
+import org.apache.maven.surefire.api.report.TestOutputReportEntry;
+import org.apache.maven.surefire.api.report.TestSetReportEntry;
+import org.apache.maven.surefire.api.testset.RunOrderParameters;
+import org.apache.maven.surefire.api.util.DefaultScanResult;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,21 +29,30 @@ public class ScalaTestProviderTest {
   @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
   private ScalaTestProvider provider;
-  private ByteArrayOutputStream output;
+  private MemoizingEventChannel eventChannel;
 
   @Before
   public void setUp() throws Exception {
-    this.output = new ByteArrayOutputStream();
-    final ProviderParameters providerParameters =
-        new TestProviderParameters(
-            new PrintStream(output),
-            Arrays.asList(
+    eventChannel = new MemoizingEventChannel();
+    final BaseProviderFactory providerParameters = new BaseProviderFactory(false);
+
+    providerParameters.setClassLoaders(getClass().getClassLoader());
+    providerParameters.setProviderProperties(new HashMap<>());
+    providerParameters.setReporterFactory(new ForkingReporterFactory(true, eventChannel));
+    providerParameters.setReporterConfiguration(
+        new ReporterConfiguration(temporaryFolder.newFolder(), true));
+    providerParameters.setRunOrderParameters(RunOrderParameters.alphabetical());
+
+    final List<String> classNames =
+        Stream.of(
                 ScalaTestProvider.class,
                 SurefireReporter.class,
                 ScalaTestProviderTest.class,
                 ExampleSpec.class,
-                HiddenSpec.class),
-            temporaryFolder.newFolder());
+                HiddenSpec.class)
+            .map(Class::getName)
+            .collect(Collectors.toList());
+    new DefaultScanResult(classNames).writeTo(providerParameters.getProviderProperties());
 
     provider = new ScalaTestProvider(providerParameters);
   }
@@ -61,37 +70,100 @@ public class ScalaTestProviderTest {
   }
 
   @Test
-  public void test_run() throws UnsupportedEncodingException {
+  public void test_run() {
     provider.invoke(null);
 
-    final String outputString = output.toString("UTF-8");
-    assertTrue(outputString.contains("- should do something without exception"));
-    assertTrue(outputString.contains("- should ignore something !!! IGNORED !!!"));
-    assertTrue(outputString.contains("- should fail dividing by 0 *** FAILED ***"));
-    assertFalse(outputString.contains("- not be discovered"));
+    assertFalse(eventChannel.reportEntries.isEmpty());
+    assertTrue(eventChannel.containsMessage("- should do something without exception"));
+    assertTrue(eventChannel.containsMessage("- should ignore something !!! IGNORED !!!"));
+    assertTrue(eventChannel.containsMessage("- should fail dividing by 0 *** FAILED ***"));
+    assertFalse(eventChannel.containsMessage("- not be discovered"));
   }
 
-  static class TestProviderParameters extends BaseProviderFactory {
+  static class MemoizingEventChannel implements MasterProcessChannelEncoder {
 
-    private final PrintStream printStream;
+    private final List<TestOutputReportEntry> reportEntries = new ArrayList<>();
 
-    public TestProviderParameters(
-        final PrintStream printStream, final List<Class<?>> discoveredClasses, final File tmpDir) {
-      super(new ForkingReporterFactory(true, printStream), false);
-      this.printStream = printStream;
-
-      setClassLoaders(getClass().getClassLoader());
-      setProviderProperties(new HashMap<>());
-      setReporterConfiguration(new ReporterConfiguration(tmpDir, true));
-
-      final List<String> classNames =
-          discoveredClasses.stream().map(Class::getName).collect(Collectors.toList());
-      new DefaultScanResult(classNames).writeTo(getProviderProperties());
+    public boolean containsMessage(final String message) {
+      for (final TestOutputReportEntry entry : reportEntries) {
+        if (entry.getLog().contains(message)) return true;
+      }
+      return false;
     }
 
     @Override
-    public ConsoleStream getConsoleLogger() {
-      return new DefaultDirectConsoleReporter(printStream);
+    public boolean checkError() {
+      return false;
     }
+
+    @Override
+    public void onJvmExit() {}
+
+    @Override
+    public void testSetStarting(
+        final TestSetReportEntry reportEntry, final boolean trimStackTraces) {}
+
+    @Override
+    public void testSetCompleted(
+        final TestSetReportEntry reportEntry, final boolean trimStackTraces) {}
+
+    @Override
+    public void testStarting(final ReportEntry reportEntry, final boolean trimStackTraces) {}
+
+    @Override
+    public void testSucceeded(final ReportEntry reportEntry, final boolean trimStackTraces) {}
+
+    @Override
+    public void testFailed(final ReportEntry reportEntry, final boolean trimStackTraces) {}
+
+    @Override
+    public void testSkipped(final ReportEntry reportEntry, final boolean trimStackTraces) {}
+
+    @Override
+    public void testError(final ReportEntry reportEntry, final boolean trimStackTraces) {}
+
+    @Override
+    public void testAssumptionFailure(
+        final ReportEntry reportEntry, final boolean trimStackTraces) {}
+
+    @Override
+    public void testOutput(final TestOutputReportEntry reportEntry) {
+      reportEntries.add(reportEntry);
+    }
+
+    @Override
+    public void consoleInfoLog(final String msg) {}
+
+    @Override
+    public void consoleErrorLog(final String msg) {}
+
+    @Override
+    public void consoleErrorLog(final Throwable t) {}
+
+    @Override
+    public void consoleErrorLog(final String msg, final Throwable t) {}
+
+    @Override
+    public void consoleErrorLog(
+        final StackTraceWriter stackTraceWriter, final boolean trimStackTraces) {}
+
+    @Override
+    public void consoleDebugLog(final String msg) {}
+
+    @Override
+    public void consoleWarningLog(final String msg) {}
+
+    @Override
+    public void bye() {}
+
+    @Override
+    public void stopOnNextTest() {}
+
+    @Override
+    public void acquireNextTest() {}
+
+    @Override
+    public void sendExitError(
+        final StackTraceWriter stackTraceWriter, final boolean trimStackTraces) {}
   }
 }

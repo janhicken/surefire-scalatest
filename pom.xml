@@ -4,7 +4,7 @@
 
     <groupId>io.github.janhicken</groupId>
     <artifactId>surefire-scalatest</artifactId>
-    <version>0.4-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <name>SureFire ScalaTest Provider</name>
     <description>A SureFire Provider for ScalaTest</description>
     <url>https://github.com/janhicken/surefire-scalatest</url>

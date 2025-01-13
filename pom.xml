@@ -13,7 +13,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>11</maven.compiler.release>
         <scala.compat.version>2.13</scala.compat.version>
-        <scala.version>2.13.15</scala.version>
+        <scala.version>2.13.16</scala.version>
         <scalatest.version>3.2.15</scalatest.version>
     </properties>
 
